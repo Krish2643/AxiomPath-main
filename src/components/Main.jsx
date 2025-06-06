@@ -29,6 +29,25 @@ const Main = () => {
     }
   };
 
+  
+  const cleanAsterisks = (text) => {
+    // if (!text) return text;
+    // return text.replace(/\*+/g, '');
+    if (!text) return text;
+    
+    // Remove all asterisks (both single * and double ** for markdown)
+    let cleanedText = text.replace(/\*+/g, '');
+    
+    // Remove hash symbols (#) - for headers
+    cleanedText = cleanedText.replace(/#+ /g, '');
+    cleanedText = cleanedText.replace(/#+/g, '');
+    
+    // Remove horizontal rules (---)
+    cleanedText = cleanedText.replace(/---+/g, '');
+    
+    return cleanedText;
+  };
+
   const handleSubmit = async () => {
     if (!input.trim()) {
       alert("Please enter a prompt...");
@@ -41,10 +60,14 @@ const Main = () => {
       const response = await axios.post(" https://axiom-chatbot-344958789989.us-central1.run.app/chat", {
         message: input,
       });
-      console.log("Response from server:", response.data?.reply);
-      const answer = response.data?.reply;
-      console.log("Response:", answer);
+      // console.log("Response from server:", response.data?.reply);
+      let answer = response.data?.reply;
       
+      // Clean asterisks from the answer
+
+      console.log("un cleaned Response:", answer);
+      answer = cleanAsterisks(answer);
+      console.log("Cleaned Response:", answer);
 
 
       setResult(answer);
@@ -57,6 +80,12 @@ const Main = () => {
       setIsLoading(false);
     }
   };
+
+  const handleInputChange = (e) => {
+    if( e.key === 'Enter') {
+      handleSubmit();
+    }
+  }
 
   return (
     <div className="main">
@@ -78,19 +107,13 @@ const Main = () => {
               <div className="result-extra">
                 <img src={assets.user} alt="User" />
               </div>
-
-              {/* {recentPrompt && (
-                <div className="recent-question">
-                  <strong>Prompt:</strong> {recentPrompt}
-                </div>
-              )} */}
-              {qnans.map((item, index) => (
+              
+              {qnans?.map((item, index) => (
                 <div key={index} className="qa-card">
-                  <p><strong></strong> {item.question}</p>
-                  <p><strong></strong> {item.answer}</p>
+                 {item?.question && <p><strong></strong> {item.question}</p>}
+                 {item?.answer && <p><strong></strong> {item.answer}</p>}
                 </div>
               ))}
-
 
               {uploadedImage && (
                 <div>
@@ -121,7 +144,8 @@ const Main = () => {
         <div className="main-bottom">
           <div className="search-box">
             <input
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e)=> setInput(e.target.value)}
+              onKeyDown={(e)=> handleInputChange(e)}
               value={input}
               type="text"
               placeholder="Enter the Prompt Here"
